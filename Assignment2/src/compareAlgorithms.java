@@ -91,6 +91,7 @@ public class compareAlgorithms {
 				QualityQuery topicQuery = topicQueryList[i];
 				String queryId =  topicQuery.getQueryID();
 				
+				
 				//Consider short query
 				String title = topicQuery.getValue("title");
 				String titleString = title.replace("/", " ");
@@ -110,16 +111,17 @@ public class compareAlgorithms {
 				String desc = topicQuery.getValue("description");
 				String descString = desc.replace("/", " ").split("<smry>")[0];
 				
-				Query query2 = parser.parse(titleString);
+				Query query2 = parser.parse(descString);
 				TopScoreDocCollector collector2 = TopScoreDocCollector.create(1000);
 				searcherSim.search(query2, collector2);
 											
 				ScoreDoc[] docs2 = collector2.topDocs().scoreDocs;
 				for (int jRank2 = 0; jRank2 < docs2.length; jRank2++) {
 					
-					Document doc = searcherSim.doc(docs[jRank2].doc);
-					writeRankToFile(queryId, doc.get("DOCNO"), jRank2+1, docs[jRank2].score, descFile, simType+"_long");
+					Document doc2 = searcherSim.doc(docs2[jRank2].doc);
+					writeRankToFile(queryId, doc2.get("DOCNO"), jRank2+1, docs2[jRank2].score, descFile, simType+"_long");
 				}
+				
 			}
 			titleFile.close();
 			descFile.close();

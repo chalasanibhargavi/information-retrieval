@@ -33,9 +33,10 @@ import java.util.Set;
 
 
 public class EasySearch {
-	
-	//Class to create a custom search function
-    public static List<Map.Entry> getRelevantDocs(String queryStr) throws Exception{
+
+	//Class to create a custom search function	
+    
+	public static List<Map.Entry> getRelevantDocs(String queryStr) throws Exception{
     	
     	//Read the index
         final String indexDir = "D:\\Grad Notes\\Search\\Assignments\\A2\\index";
@@ -54,13 +55,14 @@ public class EasySearch {
         Set<Term> queryTerms = new LinkedHashSet<Term>();
         searcher.createNormalizedWeight(query, false).extractTerms(queryTerms);
         
-        HashMap<String, Integer> termDocMap = new HashMap<String, Integer>();
+        //HashMap<String, Integer> termDocMap = new HashMap<String, Integer>();
         
         for (Term t : queryTerms) {
             
             //Count of all documents containing the term
             int termDocFreq=reader.docFreq(new Term("TEXT", t.text()));
-            termDocMap.put(t.text(), termDocFreq);
+            //System.out.println("Number of documents containing the term \""+ t.text()+ "\" for field \"TEXT\": " +termDocFreq);
+            //termDocMap.put(t.text(), termDocFreq);
 
         }
         
@@ -80,7 +82,6 @@ public class EasySearch {
             int startDocNo=leafContext.docBase;
             int numberOfDoc=leafContext.reader().maxDoc();
             
-            
             for (int docId = startDocNo; docId < startDocNo+numberOfDoc; docId++) {
                 
             	//Get normalized length for each document
@@ -89,7 +90,8 @@ public class EasySearch {
                 float docLen = 1 / (normDocLen * normDocLen);
                 
                 String docNum = searcher.doc(docId).get("DOCNO");
-                normLenMap.put(docNum, docLen);
+                //System.out.println("Normalized length for "+docNum+" :"+docLen);
+                //normLenMap.put(docNum, docLen);
                          
             }
             
@@ -108,10 +110,18 @@ public class EasySearch {
 	            	while ((doc = de.nextDoc()) != PostingsEnum.NO_MORE_DOCS) {
 		            	
 		            	int termFreq = de.freq();
+		            	int termDocFreq = reader.docFreq(t);
+		            	
 		            	String docNum = searcher.doc(de.docID()+startDocNo).get("DOCNO");
-		            	float tfVal = (float) (termFreq / normLenMap.get(docNum));
-		            	float idfVal = (float) (Math.log(1 + ((float) numTotalDocs / termDocMap.get(t.text()))) / Math.log(2));
-		            	float relvScoreTerm = tfVal + idfVal ;
+		            	
+		            	float normDocLeng = dSimi.decodeNormValue(leafContext.reader()
+								.getNormValues("TEXT").get(de.docID()));
+		            	
+		            	float docLeng = 1 / (normDocLeng * normDocLeng);
+		            	
+		            	float tfVal = (float) (termFreq / docLeng);
+		            	float idfVal = (float) (Math.log(1 + ((float) numTotalDocs / termDocFreq)) / Math.log(2));
+		            	float relvScoreTerm = tfVal * idfVal ;
 		            	
 		            	termScoreMap.put(t.text()+"|"+docNum , relvScoreTerm);
 		                
